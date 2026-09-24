@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F4F7F6">
+
+    <!-- Main Container -->
+    <ScrollView
+        android:id="@+id/mainContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="M-Pesa Auto Verify"
+                android:textColor="#1F2937"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="POS / Web App Settings"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:layout_marginBottom="24dp"/>
+
+            <Button
+                android:id="@+id/btnManualLock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔒 Lock App"
+                android:backgroundTint="#EF4444"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="8dp"/>
+                
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+                
+                <EditText
+                    android:id="@+id/etSetPin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Set 4-Digit Lock PIN"
+                    android:inputType="numberPassword"
+                    android:maxLength="4"
+                    android:background="#E5E7EB"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp"/>
+                    
+                <Button
+                    android:id="@+id/btnSetPin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Save PIN"
+                    android:backgroundTint="#3B82F6"
+                    android:textColor="#FFFFFF"/>
+            </LinearLayout>
+            
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Logout / Deactivate"
+                android:backgroundTint="#6B7280"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="16dp"/>
+
+
+            <!-- Configuration Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Primary API Settings"
+                    android:textColor="#374151"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etApiUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Payment API URL"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="12dp"
+                    android:layout_marginBottom="8dp"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etStoreId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Store / User ID"
+                    android:inputType="text"
+                    android:singleLine="true"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="12dp"
+                    android:layout_marginBottom="8dp"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etAuthToken"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Secret Token"
+                    android:inputType="textVisiblePassword"
+                    android:singleLine="true"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="12dp"/>
+            </LinearLayout>
+
+            <!-- Turso Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginTop="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Turso Database (Direct Fallback)"
+                    android:textColor="#374151"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etDbUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Turso DB URL"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="12dp"
+                    android:layout_marginBottom="8dp"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etDbToken"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Turso Auth Token"
+                    android:inputType="textVisiblePassword"
+                    android:singleLine="true"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="12dp"/>
+            </LinearLayout>
+            <!-- Custom SMS Template Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginTop="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Custom SMS Template"
+                    android:textColor="#374151"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Extract fields using: [TX], [AMOUNT], [PHONE], [NAME]"
+                    android:textColor="#6B7280"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etCustomSender"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Sender ID (e.g. KCB)"
+                    android:inputType="text"
+                    android:singleLine="true"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="12dp"
+                    android:layout_marginBottom="8dp"/>
+                
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etCustomTemplate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Template text..."
+                    android:inputType="textMultiLine"
+                    android:minLines="2"
+                    android:background="@android:color/transparent"
+                    android:paddingBottom="12dp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="24dp">
+
+                <Button
+                    android:id="@+id/btnSave"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="Save Settings"
+                    android:backgroundTint="#10B981"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
+
+                <Button
+                    android:id="@+id/btnTest"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:text="Test API"
+                    android:backgroundTint="#3B82F6"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Status: Ready"
+                android:textColor="#4B5563"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Live Activity Logs"
+                    android:textColor="#374151"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <Button
+                    android:id="@+id/btnClearLogs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Clear"
+                    android:textSize="12sp"
+                    android:backgroundTint="#EF4444"
+                    android:textColor="#FFFFFF"/>
+            </LinearLayout>
+
+            <ScrollView
+                android:id="@+id/scrollLogs"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:background="#1F2937"
+                android:padding="12dp"
+                android:layout_marginBottom="24dp">
+
+                <TextView
+                    android:id="@+id/tvLogs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#10B981"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:text="Initialized...\n"
+                    android:textIsSelectable="true"/>
+            </ScrollView>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Activation Screen Container -->
+    <LinearLayout
+        android:id="@+id/lockContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Activation Required"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#1F2937"
+            android:layout_marginBottom="8dp"/>
+            
+        <TextView
+            android:id="@+id/tvLockMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Verification Required"
+            android:textSize="14sp"
+            android:textColor="#6B7280"
+            android:textAlignment="center"
+            android:layout_marginBottom="32dp"/>
+
+        <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="Username / PIN"
+            android:inputType="text"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:background="#F3F4F6"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp"/>
+            
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:background="#F3F4F6"
+            android:padding="8dp"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnUnlock"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="Activate Device"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#10B981"
+            android:textColor="#FFFFFF"/>
+            
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Available Subscriptions"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#374151"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"/>
+            
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fadeScrollbars="false">
+            
+            <LinearLayout
+                android:id="@+id/packagesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="16dp">
+                
+                <TextView
+                    android:id="@+id/tvPackagesLoading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Loading packages..."
+                    android:textAlignment="center"
+                    android:textColor="#6B7280"
+                    android:padding="16dp"/>
+            </LinearLayout>
+        </ScrollView>
+            
+    </LinearLayout>
+
+
+    <!-- PIN Lock Container -->
+    <LinearLayout
+        android:id="@+id/pinContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:background="#FFFFFF"
+        android:visibility="gone"
+        android:elevation="10dp">
+        
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@android:drawable/ic_secure"
+            android:tint="#4CAF50"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="App Locked"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#1F2937"
+            android:layout_marginBottom="8dp"/>
+            
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter your profile password/PIN to unlock."
+            android:textSize="14sp"
+            android:textColor="#6B7280"
+            android:textAlignment="center"
+            android:layout_marginBottom="32dp"/>
+
+        <EditText
+            android:id="@+id/etUnlockPin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="4-Digit PIN"
+            android:inputType="numberPassword"
+            android:maxLength="4"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:background="#F3F4F6"
+            android:padding="8dp"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnUnlockPin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Unlock"
+            android:textSize="18sp"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"/>
+            
+    </LinearLayout>
+
+</FrameLayout>

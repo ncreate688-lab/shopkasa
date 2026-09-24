@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Admin Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        input, select, button { padding: 10px; margin: 5px 0; border-radius: 4px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
+        button { background: #10B981; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #059669; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #f8f9fa; }
+        .status-active { color: #10B981; font-weight: bold; }
+        .status-inactive { color: #EF4444; font-weight: bold; }
+        .flex { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>App Licensing Dashboard</h1>
+    
+    <h2>1. Connect to Database</h2>
+    <input type="text" id="dbUrl" placeholder="Turso URL (libsql://...)" value="libsql://sms-forwarder-pos-success.aws-ap-northeast-1.turso.io">
+    <input type="password" id="dbToken" placeholder="Turso Token (eyJ...)" value="eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODQxNjU1OTQsImlkIjoiMDE5ZjY4OGUtNWEwMS03ZTRmLTk3ZDUtN2UyNTQ3M2EwMzkyIiwia2lkIjoia05aTnBZOWg1QldlX0FHdzU4RG40RFNCbllDWWZPWUJWLTFTZ3V5NE5XOCIsInJpZCI6IjBiYTY0YzQxLWM1YjMtNDc5OS05MDBmLTFiNWU3ZmFkYWQ0NiJ9.aHdrwvBjrlGV49sXTViHqCDUI7lvmZrriUQXenim6Bv-YWT1JzrEW-hgE2aV1blsbM2Rw3nzVZDwEh9v9WfGDQ">
+    <button onclick="initDb()">Initialize Table (Run Once)</button>
+    <button onclick="loadLicenses()">Refresh Licenses</button>
+
+    <h2>2. Generate New License</h2>
+    <div class="flex">
+        <input type="text" id="newUsername" placeholder="Username / PIN (e.g., CLIENT123)">
+        <input type="text" id="newPassword" placeholder="Password (e.g., secret456)">
+    </div>
+    <div class="flex">
+        <select id="newPlan">
+            <option value="1 Device (300/mo)">1 Device (300/mo)</option>
+            <option value="5 Devices (500/mo)">5 Devices (500/mo)</option>
+            <option value="3 Devices Lifetime">3 Devices Lifetime</option>
+            <option value="5 Devices Lifetime">5 Devices Lifetime</option>
+            <option value="Up to 10 Devices Lifetime">Up to 10 Devices Lifetime</option>
+            <option value="Up to 20 Devices Lifetime">Up to 20 Devices Lifetime</option>
+        </select>
+        <input type="number" id="newLimit" placeholder="Device Limit (e.g., 3)" value="3">
+    </div>
+    <button onclick="createLicense()">Generate License</button>
+
+    <h2>3. Active Licenses</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Plan</th>
+                <th>Devices Used</th>
+                <th>Limit</th>
+                <th>Status</th>
+                  <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="licenseTableBody">
+            <tr><td colspan="5">Click Refresh to load...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function tursoQuery(sql, args = []) {
+        const url = document.getElementById('dbUrl').value.replace('libsql://', 'https://') + '/v2/pipeline';
+        const token = document.getElementById('dbToken').value;
+
+        const req = {
+            requests: [{ type: "execute", stmt: { sql, args } }]
+        };
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(req)
+        });
+        return res.json();
+    }
+
+    async function initDb() {
+        try {
+            await tursoQuery(`
+                CREATE TABLE IF NOT EXISTS licenses (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    plan_name TEXT NOT NULL,
+                    total_devices INTEGER NOT NULL,
+                    device_ids TEXT DEFAULT '[]',
+                    status TEXT DEFAULT 'active',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            alert("Database initialized successfully!");
+            loadLicenses();
+        } catch(e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    async function createLicense() {
+        const username = document.getElementById('newUsername').value;
+        const password = document.getElementById('newPassword').value;
+        const plan = document.getElementById('newPlan').value;
+        const limit = document.getElementById('newLimit').value;
+
+        if(!username || !password || !limit) return alert("Fill all fields");
+
+        try {
+            await tursoQuery(
+                "INSERT INTO licenses (username, password, plan_name, total_devices) VALUES (?, ?, ?, ?)",
+                [
+                    { type: "text", value: username },
+                    { type: "text", value: password },
+                    { type: "text", value: plan },
+                    { type: "integer", value: limit }
+                ]
+            );
+            alert("License created!");
+            loadLicenses();
+        } catch(e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    
+    async function toggleLock(username, currentStatus) {
+        if(!confirm(`Are you sure you want to ${currentStatus === 'active' ? 'lock' : 'unlock'} ${username}?`)) return;
+        const newStatus = currentStatus === 'active' ? 'locked' : 'active';
+        try {
+            await tursoQuery(
+                "UPDATE licenses SET status = ? WHERE username = ?",
+                [
+                    { type: "text", value: newStatus },
+                    { type: "text", value: username }
+                ]
+            );
+            loadLicenses();
+        } catch(e) {
+            alert("Error updating status: " + e.message);
+        }
+    }
+    
+    async function loadLicenses() {
+        try {
+            const data = await tursoQuery("SELECT * FROM licenses ORDER BY id DESC");
+            if(data.results && data.results[0] && data.results[0].response && data.results[0].response.result) {
+                const rows = data.results[0].response.result.rows;
+                const cols = data.results[0].response.result.cols.map(c => c.name);
+                
+                const tbody = document.getElementById('licenseTableBody');
+                tbody.innerHTML = "";
+
+                rows.forEach(r => {
+                    const row = {};
+                    cols.forEach((c, i) => row[c] = r[i].value);
+                    
+                    let used = 0;
+                    try { used = JSON.parse(row.device_ids).length; } catch(e){}
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.username}</td>
+                        <td>${row.plan_name}</td>
+                        <td>${used}</td>
+                        <td>${row.total_devices}</td>
+                        <td class="status-${row.status}">${row.status.toUpperCase()}</td>
+                        <td>
+                            <button onclick="toggleLock('${row.username}', '${row.status}')" style="padding:4px 8px; font-size:12px; cursor:pointer;">
+                                ${row.status === 'active' ? '🔒 Lock' : '🔓 Unlock'}
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+</script>
+
+</body>
+</html>

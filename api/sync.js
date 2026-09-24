@@ -1,0 +1,112 @@
+// api/sync.js — Vercel Serverless Function
+// Completely rebuilds individual tables to give a relational structure
+import { createClient } from '@libsql/client/web';
+
+export const maxDuration = 60; // Allow more time for large sync payloads
+
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
+
+  const { key, value, url: bodyUrl, token: bodyToken } = req.body || {};
+  const url = bodyUrl || process.env.TURSO_DATABASE_URL;
+  const token = bodyToken || process.env.TURSO_AUTH_TOKEN;
+
+  if (!url || !token) return res.status(500).json({ ok: false, error: 'Database configuration missing. Please connect from the app UI.' });
+  if (!key || value === undefined) {
+    return res.status(400).json({ ok: false, error: 'Missing key or value' });
+  }
+
+  let client;
+  try {
+    const httpUrl = url.trim().replace(/^libsql:\/\//, 'https://');
+    client = createClient({ url: httpUrl, authToken: token.trim() });
+
+    // 1. Table Schemas for all collections
+    const schemas = {
+      users: `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, firebase_uid TEXT UNIQUE, full_name TEXT, email TEXT, role TEXT, business_id TEXT, created_at TEXT, full_json TEXT)`,
+      products: `CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, name TEXT, price REAL, costPrice REAL, barcode TEXT, expiryDate TEXT, quantity REAL, category TEXT, full_json TEXT)`,
+      salesHistory: `CREATE TABLE IF NOT EXISTS salesHistory (id TEXT PRIMARY KEY, date TEXT, total REAL, full_json TEXT)`,
+      customers: `CREATE TABLE IF NOT EXISTS customers (id TEXT PRIMARY KEY, name TEXT, phone TEXT, full_json TEXT)`,
+      debts: `CREATE TABLE IF NOT EXISTS debts (id TEXT PRIMARY KEY, customerName TEXT, amount REAL, date TEXT, full_json TEXT)`,
+      paidDebts: `CREATE TABLE IF NOT EXISTS paidDebts (id TEXT PRIMARY KEY, customerName TEXT, amount REAL, date TEXT, full_json TEXT)`,
+      expenses: `CREATE TABLE IF NOT EXISTS expenses (id TEXT PRIMARY KEY, category TEXT, amount REAL, date TEXT, full_json TEXT)`,
+      stockHistory: `CREATE TABLE IF NOT EXISTS stockHistory (id TEXT PRIMARY KEY, productName TEXT, addedQuantity REAL, date TEXT, full_json TEXT)`,
+      settings: `CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY, full_json TEXT)`,
+      superAdminSettings: `CREATE TABLE IF NOT EXISTS superAdminSettings (id INTEGER PRIMARY KEY, full_json TEXT)`
+    };
+
+    if (!schemas[key]) return res.status(400).json({ ok: false, error: 'Unknown collection' });
+
+    // 2. Create the specific table if it doesn't exist
+    await client.execute(schemas[key]);
+
+    // 3. Prepare the batch transaction (Full replace to perfectly sync deletions/updates)
+    let parsedData = [];
+    try {
+      parsedData = JSON.parse(value);
+    } catch(e) {
+      return res.status(400).json({ ok: false, error: 'Invalid JSON' });
+    }
+
+    const stmts = [];
+    stmts.push({ sql: `DELETE FROM ${key}`, args: [] }); // Clear table
+
+    if (key === 'settings' || key === 'superAdminSettings') {
+      // It's a single object
+      stmts.push({
+        sql: `INSERT INTO ${key} (id, full_json) VALUES (1, ?)`,
+        args: [JSON.stringify(parsedData)]
+      });
+    } else {
+      // It's an array of items
+      if (Array.isArray(parsedData)) {
+        const tableConfigs = {
+          users: { cols: ['id', 'firebase_uid', 'full_name', 'email', 'role', 'business_id', 'created_at', 'full_json'], getArgs: (item, id) => [id, item.firebase_uid||'', item.full_name||'', item.email||'', item.role||'', item.business_id||'', item.created_at||'', JSON.stringify(item)] },
+          products: { cols: ['id', 'name', 'price', 'costPrice', 'barcode', 'expiryDate', 'quantity', 'category', 'full_json'], getArgs: (item, id) => [id, item.name||'', item.price||0, item.costPrice||0, item.barcode||'', item.expiryDate||'', item.quantity||0, item.category||'', JSON.stringify(item)] },
+          salesHistory: { cols: ['id', 'date', 'total', 'full_json'], getArgs: (item, id) => [id, item.date||'', item.total||0, JSON.stringify(item)] },
+          customers: { cols: ['id', 'name', 'phone', 'full_json'], getArgs: (item, id) => [id, item.name||'', item.phone||'', JSON.stringify(item)] },
+          debts: { cols: ['id', 'customerName', 'amount', 'date', 'full_json'], getArgs: (item, id) => [id, item.customerName||item.name||'', item.amount||0, item.date||'', JSON.stringify(item)] },
+          paidDebts: { cols: ['id', 'customerName', 'amount', 'date', 'full_json'], getArgs: (item, id) => [id, item.customerName||item.name||'', item.amount||0, item.date||'', JSON.stringify(item)] },
+          expenses: { cols: ['id', 'category', 'amount', 'date', 'full_json'], getArgs: (item, id) => [id, item.category||item.name||'', item.amount||0, item.date||'', JSON.stringify(item)] },
+          stockHistory: { cols: ['id', 'productName', 'addedQuantity', 'date', 'full_json'], getArgs: (item, id) => [id, item.productName||'', item.addedQuantity||0, item.date||'', JSON.stringify(item)] }
+        };
+
+        const config = tableConfigs[key];
+        if (config) {
+          const BATCH_SIZE = 40; // 40 items per INSERT to stay within SQLite limits
+          for (let i = 0; i < parsedData.length; i += BATCH_SIZE) {
+            const chunk = parsedData.slice(i, i + BATCH_SIZE);
+            const placeholders = chunk.map(() => `(${config.cols.map(() => '?').join(', ')})`).join(', ');
+            const args = [];
+            chunk.forEach((item, idx) => {
+              const id = String(item.id || item.date || (i + idx));
+              args.push(...config.getArgs(item, id));
+            });
+            stmts.push({
+              sql: `INSERT INTO ${key} (${config.cols.join(', ')}) VALUES ${placeholders}`,
+              args
+            });
+          }
+        }
+      }
+    }
+
+    // Execute all deletes and bulk inserts atomically in one server-side transaction
+    await client.batch(stmts, 'write');
+
+    // ✅ Update last_modified timestamp so polling devices detect the change instantly
+    const now = Date.now();
+    await client.execute(`CREATE TABLE IF NOT EXISTS meta (id INTEGER PRIMARY KEY, last_modified INTEGER NOT NULL DEFAULT 0)`);
+    await client.execute(`INSERT OR REPLACE INTO meta (id, last_modified) VALUES (1, ${now})`);
+
+    return res.status(200).json({ ok: true, last_modified: now });
+  } catch (err) {
+    return res.status(200).json({ ok: false, error: err?.message || 'Sync failed.' });
+  } finally {
+    try { client?.close(); } catch (_) {}
+  }
+}
