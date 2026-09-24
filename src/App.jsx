@@ -1283,7 +1283,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
           if (mpesaPollBusyRef.current) return;
           mpesaPollBusyRef.current = true;
           try {
-            const raw = getActiveDbSessionStr();
+            const raw = localStorage.getItem('db_session');
             if (!raw) return;
             const { url, token } = JSON.parse(raw);
             if (!url || !token) return;
