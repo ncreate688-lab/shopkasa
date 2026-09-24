@@ -1297,10 +1297,10 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
             if (!data.ok || !data.transactions) return;
 
             const consumed = getConsumed();
-            // Filter unconsumed transactions with sufficient amount
+            // Filter unconsumed transactions with sufficient amount (allow 1 KSH tolerance for floating point)
             const valid = data.transactions.filter(tx => {
                if (consumed.includes(tx.id)) return false;
-               if (Number(tx.amount) < totals.grandTotal) return false;
+               if (Number(tx.amount) < (totals.grandTotal - 1)) return false;
                return true;
             });
             setAvailableMpesaTx(valid);
@@ -1319,7 +1319,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
       // Auto-complete the sale a moment after a matching M-Pesa payment is detected,
       // so the cashier sees the "matched" confirmation before the receipt screen appears.
       useEffect(() => {
-        if (mpesaStatus === 'matched' && mpesaTxCode && !mpesaAutoConfirmedRef.current && !confirmedSaleDetails && mpesaAmount === totals.grandTotal) {
+        if (mpesaStatus === 'matched' && mpesaTxCode && !mpesaAutoConfirmedRef.current && !confirmedSaleDetails && Math.abs(mpesaAmount - totals.grandTotal) < 0.1) {
           mpesaAutoConfirmedRef.current = true;
           const t = setTimeout(() => handleConfirm(mpesaTxCode), 900);
           return () => clearTimeout(t);
