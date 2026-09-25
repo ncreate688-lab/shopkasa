@@ -2458,7 +2458,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 </div>);
     };
 
-    const StockHistoryPanel = ({ stockHistory }) => {
+    const StockHistoryPanel = ({ stockHistory, setStockHistory }) => {
       const [searchVal, setSearchVal] = useState('');
       const [dateRange, setDateRange] = useState({ start: '', end: '' });
       const [currentPage, setCurrentPage] = useState(1);
@@ -2475,13 +2475,20 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
         }).reverse();
       }, [stockHistory, searchVal, dateRange]);
 
+      const handleDeleteAll = () => {
+        if (confirm('Delete all stock history? This cannot be undone.')) {
+          setStockHistory([]);
+        }
+      };
+
       return (<div className="space-y-6 pb-20">
         <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
           <div><h2 className="text-2xl font-bold text-slate-800">Stock History</h2><p className="text-slate-500">Track inventory additions</p></div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input id="field-43" name="field-43" value={searchVal} onChange={e => setSearchVal(e.target.value)} className="input-field py-1.5 pl-9 text-sm" placeholder="Search..." /></div>
             <input id="field-44" name="field-44" type="date" value={dateRange.start} onChange={e => setDateRange({ ...dateRange, start: e.target.value })} className="input-field py-1.5 text-sm" />
             <input id="field-45" name="field-45" type="date" value={dateRange.end} onChange={e => setDateRange({ ...dateRange, end: e.target.value })} className="input-field py-1.5 text-sm" />
+            {setStockHistory && <button id="btn-delete-all-stock-history" onClick={handleDeleteAll} className="text-red-600 border border-red-200 bg-red-50 px-4 py-1.5 rounded-lg hover:bg-red-100 flex items-center gap-2 font-medium text-sm"><Trash2 className="w-4 h-4" /> Delete All</button>}
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -6055,7 +6062,7 @@ id,name,qty,barcode,date,cashierName
         if (tab === 'cashierSettings' && effectiveCurrentUser?.role === 'cashier') return <CashierSettingsPanel currentUser={effectiveCurrentUser} settings={settings} setSettings={onSettingsChange} />;
         if (tab === 'settings' && effectiveCurrentUser?.role === 'owner') return <SettingsPanel {...props} updateProducts={updateProducts} updateSalesHistory={updateSalesHistory} updateExpenses={updateExpenses} updateDebts={updateDebts} updatePaidDebts={updatePaidDebts} updateStockHistory={updateStockHistory} handleDownloadPdf={handleDownloadPdf} />;
         if (tab === 'suppliers' && canView('suppliers')) return <SupplierPanel {...props} />;
-        if (tab === 'stockHistory' && canView('stockHistory')) return <StockHistoryPanel stockHistory={stockHistory} />;
+        if (tab === 'stockHistory' && canView('stockHistory')) return <StockHistoryPanel stockHistory={stockHistory} setStockHistory={updateStockHistory} />;
         if (tab === 'staffProfiles' && effectiveCurrentUser?.role === 'owner') return <StaffProfilesPanel users={[{name: 'Owner', role: 'owner'}, ...(settings.cashiers || []).map(c => ({name: c.name, role: c.role || 'cashier'}))]} salesHistory={salesHistory} stockHistory={stockHistory} expenses={expenses} products={products} customers={customers} />;
         return null;
       };
