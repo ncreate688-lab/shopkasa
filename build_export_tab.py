@@ -70,7 +70,7 @@ def fix_export_tab():
                       </button>
                     </div>"""
 
-        if type_val in ['stock', 'products', 'customers', 'debts', 'suppliers']:
+        if type_val in ['sales', 'stock', 'products', 'customers', 'debts', 'suppliers']:
             export_tab_str += f"""\n                    <button onClick={{() => triggerImport('{type_val}')}} className="w-full flex justify-center items-center gap-2 py-2 px-3 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-xs font-semibold text-blue-500">
                       <Upload className="w-4 h-4" /> Import CSV
                     </button>"""
